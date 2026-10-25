@@ -19,6 +19,62 @@ namespace alu
 {
     switch (op)
     {
+    // adding packed 8-bit addition operation
+    case AluOp::BADD:
+    {
+        uint64_t result = 0;
+
+        for (int i = 0; i < 4; ++i)
+        {
+            uint64_t byte_a = (a >> (i * 8)) & 0xFF;
+            uint64_t byte_b = (b >> (i * 8)) & 0xFF;
+            uint64_t sum = (byte_a + byte_b) & 0xFF;
+
+            result |= (sum << (i * 8));
+        }
+
+        return {result, false};
+    }
+    case AluOp::BSUB:
+    {
+        uint64_t result = 0;
+        for (int i = 0; i < 4; ++i)
+        {
+            uint64_t byte_a = (a >> (i * 8)) & 0xFF;
+            uint64_t byte_b = (b >> (i * 8)) & 0xFF;
+            uint64_t diff = (byte_a - byte_b) & 0xFF;
+            result |= (diff << (i * 8));
+        }
+        return {result, false};
+    }
+
+    case AluOp::BMIN:
+    {
+        uint64_t result = 0;
+        for (int i = 0; i < 4; ++i)
+        {
+            uint64_t byte_a = (a >> (i * 8)) & 0xFF;
+            uint64_t byte_b = (b >> (i * 8)) & 0xFF;
+            uint64_t minimum = (byte_a < byte_b) ? byte_a : byte_b;
+            result |= (minimum << (i * 8));
+        }
+        return {result, false};
+    }
+
+    case AluOp::BMAX:
+    {
+        uint64_t result = 0;
+        for (int i = 0; i < 4; ++i)
+        {
+            uint64_t byte_a = (a >> (i * 8)) & 0xFF;
+            uint64_t byte_b = (b >> (i * 8)) & 0xFF;
+            uint64_t maximum = (byte_a > byte_b) ? byte_a : byte_b;
+            result |= (maximum << (i * 8));
+        }
+        return {result, false};
+    }
+  
+       
     case AluOp::ADD:
     {
         auto sa = static_cast<int64_t>(a);

@@ -34,6 +34,13 @@ enum class Instruction
     kslt,
     ksltu,
     kaddw,
+
+    //custom packed SIMD instructions
+    kbadd,
+    kbsub,
+    kbmin,
+    kbmax,
+
     ksubw,
     ksllw,
     ksrlw,

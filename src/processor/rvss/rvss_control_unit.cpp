@@ -26,6 +26,12 @@ void RVSSControlUnit::SetControlSignals(uint32_t instruction)
         alu_op_ = true;
         break;
     }
+    case 0b0101011:
+    { // Custom packed SIMD instructions
+        reg_write_ = true;
+        alu_op_ = true;
+        break;
+    }
     case 0b0000011:
     { // Load instructions (LB, LH, LW, LD)
         alu_src_ = true;
@@ -307,6 +313,24 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp)
         }
         break;
     }
+
+    case 0b0101011:
+    {
+        switch (funct3)
+        {
+        case 0b000:
+            return alu::AluOp::BADD;
+        case 0b001:
+            return alu::AluOp::BSUB;
+        case 0b010:
+            return alu::AluOp::BMIN;
+        case 0b011:
+            return alu::AluOp::BMAX;
+        default:
+            return alu::AluOp::NONE;
+        }
+    }
+        
     case 0b0010011:
     { // I-Type
         switch (funct3)

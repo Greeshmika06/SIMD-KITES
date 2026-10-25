@@ -24,6 +24,10 @@ std::unordered_map<Instruction, InstructionEncoding> instruction_encoding_map = 
     {Instruction::ksll, {0b0110011, -1, 0b001, -1, -1, 0b0000000}},
     {Instruction::kslt, {0b0110011, -1, 0b010, -1, -1, 0b0000000}},
     {Instruction::ksltu, {0b0110011, -1, 0b011, -1, -1, 0b0000000}},
+    {Instruction::kbadd, {0b0101011, -1, 0b000, -1, -1, 0b0000000}},
+    {Instruction::kbsub, {0b0101011, -1, 0b001, -1, -1, 0b0000000}},
+    {Instruction::kbmin, {0b0101011, -1, 0b010, -1, -1, 0b0000000}},
+    {Instruction::kbmax, {0b0101011, -1, 0b011, -1, -1, 0b0000000}},
     {Instruction::kxor, {0b0110011, -1, 0b100, -1, -1, 0b0000000}},
     {Instruction::ksrl, {0b0110011, -1, 0b101, -1, -1, 0b0000000}},
     {Instruction::ksra, {0b0110011, -1, 0b101, -1, -1, 0b0100000}},
@@ -200,6 +204,11 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
     {"slt", Instruction::kslt},
     {"sltu", Instruction::ksltu},
 
+    {"badd", Instruction::kbadd},
+    {"bsub", Instruction::kbsub},
+    {"bmin", Instruction::kbmin},
+    {"bmax", Instruction::kbmax},
+
     {"addw", Instruction::kaddw},
     {"subw", Instruction::ksubw},
     {"sllw", Instruction::ksllw},
@@ -351,7 +360,7 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
 };
 
 static const std::unordered_set<std::string> valid_instructions = {
-    "add", "sub", "and", "or", "xor", "sll", "srl", "sra", "slt", "sltu", "addw", "subw", "sllw",
+    "add", "sub","and", "or", "xor", "sll", "srl", "sra", "slt", "sltu", "badd", "bsub", "bmin", "bmax", "addw", "subw", "sllw",
     "srlw", "sraw", "addi", "xori", "ori", "andi", "slli", "srli", "srai", "slti", "sltiu", "addiw",
     "slliw", "srliw", "sraiw", "lb", "lh", "lw", "ld", "lbu", "lhu", "lwu", "sb", "sh", "sw", "sd",
     "beq", "bne", "blt", "bge", "bltu", "bgeu", "lui", "auipc", "jal", "jalr", "ecall", "ebreak",
@@ -392,6 +401,11 @@ static const std::unordered_set<std::string> RTypeInstructions = {
     "slt",
     "sltu",
 
+    // Custom packed SIMD instructions
+    "badd",
+    "bsub",
+    "bmin",
+    "bmax",
     // RV64
     "addw",
     "subw",
@@ -534,6 +548,14 @@ std::unordered_map<std::string, RTypeInstructionEncoding> R_type_instruction_enc
     {"srlw", {0b0111011, 0b101, 0b0000000}}, // O_GPR_C_GPR_C_GPR
     {"sraw", {0b0111011, 0b101, 0b0100000}}, // O_GPR_C_GPR_C_GPR
 
+
+    // Custom packed SIMD instructions
+    {"badd", {0b0101011, 0b000, 0b0000000}},
+    {"bsub", {0b0101011, 0b001, 0b0000000}},
+    {"bmin", {0b0101011, 0b010, 0b0000000}},
+    {"bmax", {0b0101011, 0b011, 0b0000000}},
+
+    {"addw", {0b0111011, 0b000, 0b0000000}},
     //==RV64M======================================================================================
     {"mul", {0b0110011, 0b000, 0b0000001}},    // O_GPR_C_GPR_C_GPR
     {"mulh", {0b0110011, 0b001, 0b0000001}},   // O_GPR_C_GPR_C_GPR
@@ -771,6 +793,12 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     {"sra", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"slt", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"sltu", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+
+        // Custom packed SIMD instructions
+    {"badd", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"bsub", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"bmin", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"bmax", {SyntaxType::O_GPR_C_GPR_C_GPR}},
 
     {"addi", {SyntaxType::O_GPR_C_GPR_C_I}},
     {"xori", {SyntaxType::O_GPR_C_GPR_C_I}},

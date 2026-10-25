@@ -36,6 +36,10 @@ namespace alu
 enum class AluOp
 {
     NONE,   ///< No operation.
+    BADD,  ///<Packed 8-bit addition
+    BSUB,  ///< Packed 8-bit subtraction
+    BMIN,  ///< Packed 8-bit unsigned minimum
+    BMAX,  ///< Packed 8-bit unsigned maximum
     ADD,    ///< Addition operation.
     ADDW,   ///< Addition word operation.
     SUB,    ///< Subtraction operation.
