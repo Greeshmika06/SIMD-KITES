@@ -26,6 +26,7 @@ void RVSSControlUnit::SetControlSignals(uint32_t instruction)
         alu_op_ = true;
         break;
     }
+    
     case 0b0101011:
     { // Custom packed SIMD instructions
         reg_write_ = true;
