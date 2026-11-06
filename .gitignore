@@ -9,6 +9,7 @@ CLAUDE.md
 examples/.vscode/
 .VSCodeCounter/
 build/
+build-mingw/
 test/test.txt
 test/testex
 Jsons/
