@@ -38,6 +38,7 @@ class RVSSProcessor : public ProcessorBase
     // int64_t memory_data_{};
     uint64_t return_address_{};
 
+
     bool branch_flag_ = false;
     int64_t next_pc_{}; // for jal, jalr,
 
@@ -75,8 +76,9 @@ class RVSSProcessor : public ProcessorBase
     ~RVSSProcessor();
 
     void Run() override;
-    void DebugRun() override;
-    void Step() override;
+void DebugRun() override;
+void RunFast();
+void Step() override;
     void Undo() override;
     void Redo() override;
     void Reset() override;

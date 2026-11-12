@@ -1135,6 +1135,26 @@ void RVSSProcessor::DebugRun()
     DumpState(globals::vm_state_dump_file_path);
 }
 
+void RVSSProcessor::RunFast()
+{
+    ClearStop();
+
+    while (!stop_requested_ && program_counter_ < program_size_)
+    {
+        Fetch();
+        Decode();
+        Execute();
+        WriteMemory();
+        WriteBack();
+
+        instructions_retired_++;
+        cycle_s_++;
+
+        current_delta_.register_changes.clear();
+        current_delta_.memory_changes.clear();
+    }
+}
+
 void RVSSProcessor::Step()
 {
     current_delta_.old_pc = program_counter_;
