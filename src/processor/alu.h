@@ -40,6 +40,9 @@ enum class AluOp
     BSUB,  ///< Packed 8-bit subtraction
     BMIN,  ///< Packed 8-bit unsigned minimum
     BMAX,  ///< Packed 8-bit unsigned maximum
+    BMUL,      ///< Packed 8-bit multiplication (low 8 bits)
+    BADDS,     ///< Packed 8-bit saturating addition
+    BSUBS,     ///< Packed 8-bit saturating subtraction
     ADD,    ///< Addition operation.
     ADDW,   ///< Addition word operation.
     SUB,    ///< Subtraction operation.

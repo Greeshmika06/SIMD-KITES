@@ -40,6 +40,9 @@ enum class Instruction
     kbsub,
     kbmin,
     kbmax,
+    kbmul,
+    kbadds,
+    kbsubs,
 
     ksubw,
     ksllw,

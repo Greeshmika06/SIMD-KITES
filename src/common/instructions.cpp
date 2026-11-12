@@ -28,6 +28,9 @@ std::unordered_map<Instruction, InstructionEncoding> instruction_encoding_map = 
     {Instruction::kbsub, {0b0101011, -1, 0b001, -1, -1, 0b0000000}},
     {Instruction::kbmin, {0b0101011, -1, 0b010, -1, -1, 0b0000000}},
     {Instruction::kbmax, {0b0101011, -1, 0b011, -1, -1, 0b0000000}},
+    {Instruction::kbmul, {0b0101011, -1, 0b100, -1, -1, 0b0000000}},
+    {Instruction::kbadds, {0b0101011, -1, 0b101, -1, -1, 0b0000000}},
+    {Instruction::kbsubs, {0b0101011, -1, 0b110, -1, -1, 0b0000000}},
     {Instruction::kxor, {0b0110011, -1, 0b100, -1, -1, 0b0000000}},
     {Instruction::ksrl, {0b0110011, -1, 0b101, -1, -1, 0b0000000}},
     {Instruction::ksra, {0b0110011, -1, 0b101, -1, -1, 0b0100000}},
@@ -208,6 +211,9 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
     {"bsub", Instruction::kbsub},
     {"bmin", Instruction::kbmin},
     {"bmax", Instruction::kbmax},
+    {"bmul", Instruction::kbmul},
+    {"badds", Instruction::kbadds},
+    {"bsubs", Instruction::kbsubs},
 
     {"addw", Instruction::kaddw},
     {"subw", Instruction::ksubw},
@@ -360,7 +366,7 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
 };
 
 static const std::unordered_set<std::string> valid_instructions = {
-    "add", "sub","and", "or", "xor", "sll", "srl", "sra", "slt", "sltu", "badd", "bsub", "bmin", "bmax", "addw", "subw", "sllw",
+    "add", "sub","and", "or", "xor", "sll", "srl", "sra", "slt", "sltu", "badd", "bsub", "bmin", "bmax","bmul", "badds", "bsubs", "addw", "subw", "sllw",
     "srlw", "sraw", "addi", "xori", "ori", "andi", "slli", "srli", "srai", "slti", "sltiu", "addiw",
     "slliw", "srliw", "sraiw", "lb", "lh", "lw", "ld", "lbu", "lhu", "lwu", "sb", "sh", "sw", "sd",
     "beq", "bne", "blt", "bge", "bltu", "bgeu", "lui", "auipc", "jal", "jalr", "ecall", "ebreak",
@@ -406,6 +412,10 @@ static const std::unordered_set<std::string> RTypeInstructions = {
     "bsub",
     "bmin",
     "bmax",
+    "bmul",
+    "badds",
+    "bsubs",
+
     // RV64
     "addw",
     "subw",
@@ -554,6 +564,9 @@ std::unordered_map<std::string, RTypeInstructionEncoding> R_type_instruction_enc
     {"bsub", {0b0101011, 0b001, 0b0000000}},
     {"bmin", {0b0101011, 0b010, 0b0000000}},
     {"bmax", {0b0101011, 0b011, 0b0000000}},
+    {"bmul", {0b0101011, 0b100, 0b0000000}},
+    {"badds", {0b0101011, 0b101, 0b0000000}},
+    {"bsubs", {0b0101011, 0b110, 0b0000000}},
 
     {"addw", {0b0111011, 0b000, 0b0000000}},
     //==RV64M======================================================================================
@@ -799,6 +812,9 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     {"bsub", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"bmin", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"bmax", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"bmul", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"badds", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"bsubs", {SyntaxType::O_GPR_C_GPR_C_GPR}},
 
     {"addi", {SyntaxType::O_GPR_C_GPR_C_I}},
     {"xori", {SyntaxType::O_GPR_C_GPR_C_I}},
