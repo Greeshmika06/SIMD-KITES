@@ -102,7 +102,7 @@ TEST(ImageProcessing, SimdBrightness)
         "li x2, 0x28282828\n"
         "loop:\n"
         "lw x1, 0(x10)\n"
-        "badd x3, x1, x2\n"
+        "badds x3, x1, x2\n"
         "sw x3, 0(x11)\n"
         "addi x10, x10, 4\n"
         "addi x11, x11, 4\n"
