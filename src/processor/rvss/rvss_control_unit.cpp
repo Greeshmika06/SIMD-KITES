@@ -315,7 +315,7 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp)
         break;
     }
 
-    case 0b0101011:
+        case 0b0101011:
     {
         switch (funct3)
         {
@@ -327,10 +327,17 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp)
             return alu::AluOp::BMIN;
         case 0b011:
             return alu::AluOp::BMAX;
+        case 0b100:
+            return alu::AluOp::BMUL;
+        case 0b101:
+            return alu::AluOp::BADDS;
+        case 0b110:
+            return alu::AluOp::BSUBS;
         default:
             return alu::AluOp::NONE;
         }
     }
+
         
     case 0b0010011:
     { // I-Type

@@ -73,7 +73,63 @@ namespace alu
         }
         return {result, false};
     }
-  
+
+        // Packed 8-bit multiplication (keep only the lowest 8 bits)
+    case AluOp::BMUL:
+    {
+        uint64_t result = 0;
+
+        for (int i = 0; i < 4; ++i)
+        {
+            uint64_t byte_a = (a >> (i * 8)) & 0xFF;
+            uint64_t byte_b = (b >> (i * 8)) & 0xFF;
+            uint64_t product = (byte_a * byte_b) & 0xFF;
+
+            result |= (product << (i * 8));
+        }
+
+        return {result, false};
+    }
+
+    // Packed 8-bit saturating addition (maximum result is 255)
+    case AluOp::BADDS:
+    {
+        uint64_t result = 0;
+
+        for (int i = 0; i < 4; ++i)
+        {
+            uint64_t byte_a = (a >> (i * 8)) & 0xFF;
+            uint64_t byte_b = (b >> (i * 8)) & 0xFF;
+            uint64_t sum = byte_a + byte_b;
+            uint64_t saturated = (sum > 255) ? 255 : sum;
+
+            result |= (saturated << (i * 8));
+        }
+
+        return {result, false};
+    }
+    // Packed 8-bit saturating subtraction (minimum result is 0)
+    case AluOp::BSUBS:
+    {
+        uint64_t result = 0;
+
+        for (int i = 0; i < 4; ++i)
+        {
+            uint64_t byte_a = (a >> (i * 8)) & 0xFF;
+            uint64_t byte_b = (b >> (i * 8)) & 0xFF;
+
+            uint64_t difference = (byte_a > byte_b)
+                                    ? (byte_a - byte_b)
+                                    : 0;
+
+            result |= (difference << (i * 8));
+        }
+
+        return {result, false};
+    }
+
+    // Packed 8-bit saturating subtraction (minimum result is 0)
+    
        
     case AluOp::ADD:
     {
