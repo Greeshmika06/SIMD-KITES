@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -13,6 +13,7 @@ namespace
 
 std::unique_ptr<Kites::RVSSProcessor> runSource(const std::string &source)
 {
+
     Kites::setupVmStateDirectory();
 
     auto vm = std::make_unique<Kites::RVSSProcessor>();
@@ -24,6 +25,8 @@ std::unique_ptr<Kites::RVSSProcessor> runSource(const std::string &source)
 
     return vm;
 }
+
+
 
 void expectBadd(uint32_t a, uint32_t b, uint32_t expected)
 {
@@ -70,6 +73,44 @@ void expectBmax(uint32_t a, uint32_t b, uint32_t expected)
 
     EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
 }
+
+
+void expectBmul(uint32_t a, uint32_t b, uint32_t expected)
+{
+    std::string source =
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n" +
+        "bmul x3, x1, x2\n";
+
+    auto vm = runSource(source);
+
+    EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
+}
+
+void expectBadds(uint32_t a, uint32_t b, uint32_t expected)
+{
+    std::string source =
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n" +
+        "badds x3, x1, x2\n";
+
+    auto vm = runSource(source);
+
+    EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
+}
+
+void expectBsubs(uint32_t a, uint32_t b, uint32_t expected)
+{
+    std::string source =
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n" +
+        "bsubs x3, x1, x2\n";
+
+    auto vm = runSource(source);
+
+    EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
+}
+
 
 void expectScalarBadd(uint32_t a, uint32_t b, uint32_t expected)
 {
@@ -369,6 +410,32 @@ TEST(PackedSimd, Bmax)
     expectBmax(0xFF00FF00, 0x01010101, 0xFF01FF01);
 }
 
+TEST(PackedSimd, Bmul)
+{
+    expectBmul(0x02030405, 0x02020202, 0x0406080A);
+    expectBmul(0x12345678, 0x00000000, 0x00000000);
+    expectBmul(0xFF010280, 0x02020102, 0xFE020200);
+    expectBmul(0x01020304, 0x04030201, 0x04060604);
+    expectBmul(0xFFFFFFFF, 0xFFFFFFFF, 0x01010101);
+}
+
+TEST(PackedSimd, Badds)
+{
+    expectBadds(0xFA141E28, 0x0A0A0A0A, 0xFF1E2832);
+    expectBadds(0x01020304, 0x01010101, 0x02030405);
+    expectBadds(0xFFFFFFFF, 0x01010101, 0xFFFFFFFF);
+    expectBadds(0x12345678, 0x00000000, 0x12345678);
+    expectBadds(0xFF00FE01, 0x010102FE, 0xFF01FFFF);
+}
+
+TEST(PackedSimd, Bsubs)
+{
+    expectBsubs(0x08070605, 0x04030201, 0x04040404);
+    expectBsubs(0x050A1420, 0x0A0F0A10, 0x00000A10);
+    expectBsubs(0x12345678, 0x01010101, 0x11335577);
+    expectBsubs(0xAABBCCDD, 0xAABBCCDD, 0x00000000);
+    expectBsubs(0xFF00FF00, 0x01010101, 0xFE00FE00);
+}
 
 
 TEST(PackedSimd, ScalarBaddCheck)
