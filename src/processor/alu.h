@@ -43,6 +43,7 @@ enum class AluOp
     BMUL,      ///< Packed 8-bit multiplication (low 8 bits)
     BADDS,     ///< Packed 8-bit saturating addition
     BSUBS,     ///< Packed 8-bit saturating subtraction
+    BMULS,     ///< Packed 8-bit saturating multiplication
     ADD,    ///< Addition operation.
     ADDW,   ///< Addition word operation.
     SUB,    ///< Subtraction operation.

@@ -43,6 +43,7 @@ enum class Instruction
     kbmul,
     kbadds,
     kbsubs,
+    kbmuls,
 
     ksubw,
     ksllw,
