@@ -112,6 +112,18 @@ void expectBsubs(uint64_t a, uint64_t b, uint64_t expected)
     EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
 }
 
+void expectBmuls(uint64_t a, uint64_t b, uint64_t expected)
+{
+    std::string source =
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n" +
+        "bmuls x3, x1, x2\n";
+
+    auto vm = runSource(source);
+
+    EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
+}
+
 
 void expectScalarBadd(uint64_t a, uint64_t b, uint64_t expected)
 {
@@ -606,6 +618,15 @@ TEST(PackedSimd, Bsubs)
     expectBsubs(0xFF00FF00, 0x01010101, 0xFE00FE00);
 }
 
+TEST(PackedSimd, Bmuls)
+{
+    expectBmuls(0x02030405, 0x02020202, 0x0406080A);
+    expectBmuls(0x12345678, 0x00000000, 0x00000000);
+    expectBmuls(0xFF010280, 0x02020102, 0xFF0202FF);
+    expectBmuls(0x01020304, 0x04030201, 0x04060604);
+    expectBmuls(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
+}
+
 TEST(PackedSimd, OperatesOnAllEightBytes)
 {
     constexpr uint64_t a = 0x1020304050607080ULL;
@@ -618,6 +639,7 @@ TEST(PackedSimd, OperatesOnAllEightBytes)
     expectBmul(a, b, a);
     expectBadds(a, b, 0x1121314151617181ULL);
     expectBsubs(a, b, 0x0F1F2F3F4F5F6F7FULL);
+    expectBmuls(a, b, a);
 }
 
 

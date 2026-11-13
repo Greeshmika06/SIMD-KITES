@@ -333,6 +333,8 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp)
             return alu::AluOp::BADDS;
         case 0b110:
             return alu::AluOp::BSUBS;
+        case 0b111:
+            return alu::AluOp::BMULS;
         default:
             return alu::AluOp::NONE;
         }

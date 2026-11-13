@@ -128,9 +128,24 @@ namespace alu
         return {result, false};
     }
 
-    // Packed 8-bit saturating subtraction (minimum result is 0)
-    
-       
+    // Packed 8-bit saturating multiplication (maximum result is 255)
+    case AluOp::BMULS:
+    {
+        uint64_t result = 0;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            uint64_t byte_a = (a >> (i * 8)) & 0xFF;
+            uint64_t byte_b = (b >> (i * 8)) & 0xFF;
+            uint64_t product = byte_a * byte_b;
+            uint64_t saturated = (product > 0xFF) ? 0xFF : product;
+
+            result |= (saturated << (i * 8));
+        }
+
+        return {result, false};
+    }
+
     case AluOp::ADD:
     {
         auto sa = static_cast<int64_t>(a);
