@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -28,7 +29,7 @@ std::unique_ptr<Kites::RVSSProcessor> runSource(const std::string &source)
 
 
 
-void expectBadd(uint32_t a, uint32_t b, uint32_t expected)
+void expectBadd(uint64_t a, uint64_t b, uint64_t expected)
 {
     std::string source =
         "li x1, " + std::to_string(a) + "\n" +
@@ -39,7 +40,7 @@ void expectBadd(uint32_t a, uint32_t b, uint32_t expected)
 
     EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
 }
-void expectBsub(uint32_t a, uint32_t b, uint32_t expected)
+void expectBsub(uint64_t a, uint64_t b, uint64_t expected)
 {
     std::string source =
         "li x1, " + std::to_string(a) + "\n" +
@@ -50,7 +51,7 @@ void expectBsub(uint32_t a, uint32_t b, uint32_t expected)
 
     EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
 }
-void expectBmin(uint32_t a, uint32_t b, uint32_t expected)
+void expectBmin(uint64_t a, uint64_t b, uint64_t expected)
 {
     std::string source =
         "li x1, " + std::to_string(a) + "\n" +
@@ -62,7 +63,7 @@ void expectBmin(uint32_t a, uint32_t b, uint32_t expected)
     EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
 }
 
-void expectBmax(uint32_t a, uint32_t b, uint32_t expected)
+void expectBmax(uint64_t a, uint64_t b, uint64_t expected)
 {
     std::string source =
         "li x1, " + std::to_string(a) + "\n" +
@@ -75,7 +76,7 @@ void expectBmax(uint32_t a, uint32_t b, uint32_t expected)
 }
 
 
-void expectBmul(uint32_t a, uint32_t b, uint32_t expected)
+void expectBmul(uint64_t a, uint64_t b, uint64_t expected)
 {
     std::string source =
         "li x1, " + std::to_string(a) + "\n" +
@@ -87,7 +88,7 @@ void expectBmul(uint32_t a, uint32_t b, uint32_t expected)
     EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
 }
 
-void expectBadds(uint32_t a, uint32_t b, uint32_t expected)
+void expectBadds(uint64_t a, uint64_t b, uint64_t expected)
 {
     std::string source =
         "li x1, " + std::to_string(a) + "\n" +
@@ -99,7 +100,7 @@ void expectBadds(uint32_t a, uint32_t b, uint32_t expected)
     EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
 }
 
-void expectBsubs(uint32_t a, uint32_t b, uint32_t expected)
+void expectBsubs(uint64_t a, uint64_t b, uint64_t expected)
 {
     std::string source =
         "li x1, " + std::to_string(a) + "\n" +
@@ -112,7 +113,7 @@ void expectBsubs(uint32_t a, uint32_t b, uint32_t expected)
 }
 
 
-void expectScalarBadd(uint32_t a, uint32_t b, uint32_t expected)
+void expectScalarBadd(uint64_t a, uint64_t b, uint64_t expected)
 {
     std::string source =
         "li x1, " + std::to_string(a) + "\n" +
@@ -152,6 +153,40 @@ void expectScalarBadd(uint32_t a, uint32_t b, uint32_t expected)
         "add x7, x4, x5\n"
         "andi x7, x7, 255\n"
         "slli x7, x7, 24\n"
+        "or x6, x6, x7\n"
+
+        // Bytes 4-7
+        "srli x4, x1, 32\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 32\n"
+        "andi x5, x5, 255\n"
+        "add x7, x4, x5\n"
+        "andi x7, x7, 255\n"
+        "slli x7, x7, 32\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 40\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 40\n"
+        "andi x5, x5, 255\n"
+        "add x7, x4, x5\n"
+        "andi x7, x7, 255\n"
+        "slli x7, x7, 40\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 48\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 48\n"
+        "andi x5, x5, 255\n"
+        "add x7, x4, x5\n"
+        "andi x7, x7, 255\n"
+        "slli x7, x7, 48\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 56\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 56\n"
+        "andi x5, x5, 255\n"
+        "add x7, x4, x5\n"
+        "andi x7, x7, 255\n"
+        "slli x7, x7, 56\n"
         "or x6, x6, x7\n";
 
     auto vm = runSource(source);
@@ -159,7 +194,7 @@ void expectScalarBadd(uint32_t a, uint32_t b, uint32_t expected)
     EXPECT_EQ(vm->registers_.ReadGpr(6), expected);
 }
 
-void expectScalarBsub(uint32_t a, uint32_t b, uint32_t expected)
+void expectScalarBsub(uint64_t a, uint64_t b, uint64_t expected)
 {
     std::string source =
         "li x1, " + std::to_string(a) + "\n" +
@@ -199,6 +234,40 @@ void expectScalarBsub(uint32_t a, uint32_t b, uint32_t expected)
         "sub x7, x4, x5\n"
         "andi x7, x7, 255\n"
         "slli x7, x7, 24\n"
+        "or x6, x6, x7\n"
+
+        // Bytes 4-7
+        "srli x4, x1, 32\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 32\n"
+        "andi x5, x5, 255\n"
+        "sub x7, x4, x5\n"
+        "andi x7, x7, 255\n"
+        "slli x7, x7, 32\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 40\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 40\n"
+        "andi x5, x5, 255\n"
+        "sub x7, x4, x5\n"
+        "andi x7, x7, 255\n"
+        "slli x7, x7, 40\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 48\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 48\n"
+        "andi x5, x5, 255\n"
+        "sub x7, x4, x5\n"
+        "andi x7, x7, 255\n"
+        "slli x7, x7, 48\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 56\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 56\n"
+        "andi x5, x5, 255\n"
+        "sub x7, x4, x5\n"
+        "andi x7, x7, 255\n"
+        "slli x7, x7, 56\n"
         "or x6, x6, x7\n";
 
     auto vm = runSource(source);
@@ -207,7 +276,7 @@ void expectScalarBsub(uint32_t a, uint32_t b, uint32_t expected)
 }
 
 std::unique_ptr<Kites::RVSSProcessor> expectScalarBmin(
-    uint32_t a, uint32_t b, uint32_t expected)
+    uint64_t a, uint64_t b, uint64_t expected)
 {
     std::string source =
         "li x1, " + std::to_string(a) + "\n" +
@@ -263,6 +332,56 @@ std::unique_ptr<Kites::RVSSProcessor> expectScalarBmin(
         "and x10, x5, x10\n"
         "or x7, x9, x10\n"
         "slli x7, x7, 24\n"
+        "or x6, x6, x7\n"
+
+        // Bytes 4-7
+        "srli x4, x1, 32\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 32\n"
+        "andi x5, x5, 255\n"
+        "sltu x8, x4, x5\n"
+        "sub x8, x0, x8\n"
+        "and x9, x4, x8\n"
+        "xori x10, x8, -1\n"
+        "and x10, x5, x10\n"
+        "or x7, x9, x10\n"
+        "slli x7, x7, 32\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 40\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 40\n"
+        "andi x5, x5, 255\n"
+        "sltu x8, x4, x5\n"
+        "sub x8, x0, x8\n"
+        "and x9, x4, x8\n"
+        "xori x10, x8, -1\n"
+        "and x10, x5, x10\n"
+        "or x7, x9, x10\n"
+        "slli x7, x7, 40\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 48\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 48\n"
+        "andi x5, x5, 255\n"
+        "sltu x8, x4, x5\n"
+        "sub x8, x0, x8\n"
+        "and x9, x4, x8\n"
+        "xori x10, x8, -1\n"
+        "and x10, x5, x10\n"
+        "or x7, x9, x10\n"
+        "slli x7, x7, 48\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 56\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 56\n"
+        "andi x5, x5, 255\n"
+        "sltu x8, x4, x5\n"
+        "sub x8, x0, x8\n"
+        "and x9, x4, x8\n"
+        "xori x10, x8, -1\n"
+        "and x10, x5, x10\n"
+        "or x7, x9, x10\n"
+        "slli x7, x7, 56\n"
         "or x6, x6, x7\n";
 
     auto vm = runSource(source);
@@ -272,7 +391,7 @@ std::unique_ptr<Kites::RVSSProcessor> expectScalarBmin(
 }
 
 std::unique_ptr<Kites::RVSSProcessor> expectScalarBmax(
-    uint32_t a, uint32_t b, uint32_t expected)
+    uint64_t a, uint64_t b, uint64_t expected)
 {
     std::string source =
         "li x1, " + std::to_string(a) + "\n" +
@@ -328,6 +447,56 @@ std::unique_ptr<Kites::RVSSProcessor> expectScalarBmax(
         "and x10, x4, x10\n"
         "or x7, x9, x10\n"
         "slli x7, x7, 24\n"
+        "or x6, x6, x7\n"
+
+        // Bytes 4-7
+        "srli x4, x1, 32\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 32\n"
+        "andi x5, x5, 255\n"
+        "sltu x8, x4, x5\n"
+        "sub x8, x0, x8\n"
+        "and x9, x5, x8\n"
+        "xori x10, x8, -1\n"
+        "and x10, x4, x10\n"
+        "or x7, x9, x10\n"
+        "slli x7, x7, 32\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 40\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 40\n"
+        "andi x5, x5, 255\n"
+        "sltu x8, x4, x5\n"
+        "sub x8, x0, x8\n"
+        "and x9, x5, x8\n"
+        "xori x10, x8, -1\n"
+        "and x10, x4, x10\n"
+        "or x7, x9, x10\n"
+        "slli x7, x7, 40\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 48\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 48\n"
+        "andi x5, x5, 255\n"
+        "sltu x8, x4, x5\n"
+        "sub x8, x0, x8\n"
+        "and x9, x5, x8\n"
+        "xori x10, x8, -1\n"
+        "and x10, x4, x10\n"
+        "or x7, x9, x10\n"
+        "slli x7, x7, 48\n"
+        "or x6, x6, x7\n"
+        "srli x4, x1, 56\n"
+        "andi x4, x4, 255\n"
+        "srli x5, x2, 56\n"
+        "andi x5, x5, 255\n"
+        "sltu x8, x4, x5\n"
+        "sub x8, x0, x8\n"
+        "and x9, x5, x8\n"
+        "xori x10, x8, -1\n"
+        "and x10, x4, x10\n"
+        "or x7, x9, x10\n"
+        "slli x7, x7, 56\n"
         "or x6, x6, x7\n";
 
     auto vm = runSource(source);
@@ -437,10 +606,26 @@ TEST(PackedSimd, Bsubs)
     expectBsubs(0xFF00FF00, 0x01010101, 0xFE00FE00);
 }
 
+TEST(PackedSimd, OperatesOnAllEightBytes)
+{
+    constexpr uint64_t a = 0x1020304050607080ULL;
+    constexpr uint64_t b = 0x0101010101010101ULL;
+
+    expectBadd(a, b, 0x1121314151617181ULL);
+    expectBsub(a, b, 0x0F1F2F3F4F5F6F7FULL);
+    expectBmin(a, b, 0x0101010101010101ULL);
+    expectBmax(a, b, a);
+    expectBmul(a, b, a);
+    expectBadds(a, b, 0x1121314151617181ULL);
+    expectBsubs(a, b, 0x0F1F2F3F4F5F6F7FULL);
+}
+
 
 TEST(PackedSimd, ScalarBaddCheck)
 {
     expectScalarBadd(0x04030201, 0x08070605, 0x0C0A0806);
+    expectScalarBadd(0x1020304050607080ULL, 0x0101010101010101ULL,
+                     0x1121314151617181ULL);
 }
 
 TEST(PackedSimd, ScalarBsubCheck)
@@ -448,6 +633,8 @@ TEST(PackedSimd, ScalarBsubCheck)
     expectScalarBsub(0x08070605, 0x04030201, 0x04040404);
     expectScalarBsub(0x00000000, 0x01010101, 0xFFFFFFFF);
     expectScalarBsub(0x01000100, 0x00010001, 0x01FF01FF);
+    expectScalarBsub(0x1020304050607080ULL, 0x0101010101010101ULL,
+                     0x0F1F2F3F4F5F6F7FULL);
 }
 
 TEST(PackedSimd, ScalarBminCheck)
@@ -456,6 +643,8 @@ TEST(PackedSimd, ScalarBminCheck)
     expectScalarBmin(0x01020304, 0x05060708, 0x01020304);
     expectScalarBmin(0xFF00FF00, 0x01010101, 0x01000100);
     expectScalarBmin(0xAABBCCDD, 0xAABBCCDD, 0xAABBCCDD);
+    expectScalarBmin(0x1020304050607080ULL, 0x0101010101010101ULL,
+                     0x0101010101010101ULL);
 }
 
 TEST(PackedSimd, ScalarBmaxCheck)
@@ -464,13 +653,15 @@ TEST(PackedSimd, ScalarBmaxCheck)
     expectScalarBmax(0x01020304, 0x05060708, 0x05060708);
     expectScalarBmax(0xFF00FF00, 0x01010101, 0xFF01FF01);
     expectScalarBmax(0xAABBCCDD, 0xAABBCCDD, 0xAABBCCDD);
+    expectScalarBmax(0x1020304050607080ULL, 0x0101010101010101ULL,
+                     0x1020304050607080ULL);
 }
 
 TEST(PackedSimd, BaddPerformance)
 {
-    uint32_t a = 0x04030201;
-    uint32_t b = 0x08070605;
-    uint32_t expected = 0x0C0A0806;
+    uint64_t a = 0x04030201;
+    uint64_t b = 0x08070605;
+    uint64_t expected = 0x0C0A0806;
 
     // Scalar implementation
     std::string scalarSource =
@@ -551,9 +742,9 @@ std::cout << "Simulated speedup: "
 
 TEST(PackedSimd, BsubPerformance)
 {
-    uint32_t a = 0x08070605;
-    uint32_t b = 0x04030201;
-    uint32_t expected = 0x04040404;
+    uint64_t a = 0x08070605;
+    uint64_t b = 0x04030201;
+    uint64_t expected = 0x04040404;
 
     // Scalar implementation
     std::string scalarSource =
@@ -638,9 +829,9 @@ EXPECT_EQ(simdVm->instructions_retired_, simdVm->cycle_s_);
 
 TEST(PackedSimd, BminPerformance)
 {
-    uint32_t a = 0x08070605;
-    uint32_t b = 0x04030201;
-    uint32_t expected = 0x04030201;
+    uint64_t a = 0x08070605;
+    uint64_t b = 0x04030201;
+    uint64_t expected = 0x04030201;
 
     // Scalar implementation
     auto scalarVm = expectScalarBmin(a, b, expected);
@@ -682,9 +873,9 @@ TEST(PackedSimd, BminPerformance)
 
 TEST(PackedSimd, BmaxPerformance)
 {
-    uint32_t a = 0x08070605;
-    uint32_t b = 0x04030201;
-    uint32_t expected = 0x08070605;
+    uint64_t a = 0x08070605;
+    uint64_t b = 0x04030201;
+    uint64_t expected = 0x08070605;
 
     // Scalar implementation
     auto scalarVm = expectScalarBmax(a, b, expected);

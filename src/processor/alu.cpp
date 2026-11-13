@@ -24,7 +24,7 @@ namespace alu
     {
         uint64_t result = 0;
 
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 8; ++i)
         {
             uint64_t byte_a = (a >> (i * 8)) & 0xFF;
             uint64_t byte_b = (b >> (i * 8)) & 0xFF;
@@ -38,7 +38,7 @@ namespace alu
     case AluOp::BSUB:
     {
         uint64_t result = 0;
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 8; ++i)
         {
             uint64_t byte_a = (a >> (i * 8)) & 0xFF;
             uint64_t byte_b = (b >> (i * 8)) & 0xFF;
@@ -51,7 +51,7 @@ namespace alu
     case AluOp::BMIN:
     {
         uint64_t result = 0;
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 8; ++i)
         {
             uint64_t byte_a = (a >> (i * 8)) & 0xFF;
             uint64_t byte_b = (b >> (i * 8)) & 0xFF;
@@ -64,7 +64,7 @@ namespace alu
     case AluOp::BMAX:
     {
         uint64_t result = 0;
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 8; ++i)
         {
             uint64_t byte_a = (a >> (i * 8)) & 0xFF;
             uint64_t byte_b = (b >> (i * 8)) & 0xFF;
@@ -79,7 +79,7 @@ namespace alu
     {
         uint64_t result = 0;
 
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 8; ++i)
         {
             uint64_t byte_a = (a >> (i * 8)) & 0xFF;
             uint64_t byte_b = (b >> (i * 8)) & 0xFF;
@@ -96,7 +96,7 @@ namespace alu
     {
         uint64_t result = 0;
 
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 8; ++i)
         {
             uint64_t byte_a = (a >> (i * 8)) & 0xFF;
             uint64_t byte_b = (b >> (i * 8)) & 0xFF;
@@ -113,7 +113,7 @@ namespace alu
     {
         uint64_t result = 0;
 
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 8; ++i)
         {
             uint64_t byte_a = (a >> (i * 8)) & 0xFF;
             uint64_t byte_b = (b >> (i * 8)) & 0xFF;
