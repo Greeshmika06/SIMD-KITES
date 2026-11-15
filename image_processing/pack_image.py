@@ -4,18 +4,14 @@ img = Image.open("input.png").convert("L")
 pixels = list(img.getdata())
 
 with open("input.txt", "w") as f:
-    for i in range(0, len(pixels), 4):
-        p = pixels[i:i+4]
+    for i in range(0, len(pixels), 8):
+        p = pixels[i:i+8]
 
-        value = (
-            (p[3] << 24) |
-            (p[2] << 16) |
-            (p[1] << 8) |
-            p[0]
-        )
+        value = sum(pixel << (8 * offset) for offset, pixel in enumerate(p))
 
-        f.write(f"{value:08X}\n")
+        f.write(f"{value:016X}\n")
 
 print("Pixels packed successfully!")
 print("Total pixels:", len(pixels))
-print("Packed values:", len(pixels) // 4)
+print("Pixels per packed value:", 8)
+print("Packed values:", (len(pixels) + 7) // 8)

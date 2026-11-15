@@ -22,7 +22,7 @@ std::unique_ptr<Kites::RVSSProcessor> runSource(const std::string &source)
     Kites::AssembledProgram program = Kites::assemble(stream);
 
     vm->LoadProgram(program);
-    vm->DebugRun();
+    vm->RunFast();
 
     return vm;
 }
