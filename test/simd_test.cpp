@@ -517,6 +517,150 @@ std::unique_ptr<Kites::RVSSProcessor> expectScalarBmax(
     return vm;
 }
 
+std::unique_ptr<Kites::RVSSProcessor> runScalarByteMultiply(
+    uint64_t a, uint64_t b, bool saturating)
+{
+    std::string source =
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n"
+        "li x11, 0\n";
+
+    if (saturating)
+    {
+        source += "li x9, 255\n";
+    }
+
+    for (unsigned int lane = 0; lane < 8; ++lane)
+    {
+        const unsigned int shift = lane * 8;
+        source +=
+            "srli x4, x1, " + std::to_string(shift) + "\n" +
+            "andi x4, x4, 255\n" +
+            "srli x5, x2, " + std::to_string(shift) + "\n" +
+            "andi x5, x5, 255\n" +
+            "mul x6, x4, x5\n";
+
+        if (saturating)
+        {
+            source +=
+                "sltiu x8, x6, 256\n"
+                "sub x8, x0, x8\n"
+                "xori x10, x8, -1\n"
+                "and x6, x6, x8\n"
+                "and x10, x9, x10\n"
+                "or x6, x6, x10\n";
+        }
+        else
+        {
+            source += "andi x6, x6, 255\n";
+        }
+
+        if (shift != 0)
+        {
+            source += "slli x6, x6, " + std::to_string(shift) + "\n";
+        }
+        source += "or x11, x11, x6\n";
+    }
+
+    return runSource(source);
+}
+
+std::unique_ptr<Kites::RVSSProcessor> runScalarByteWrap(
+    uint64_t a, uint64_t b, bool subtract)
+{
+    std::string source =
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n"
+        "li x11, 0\n";
+
+    for (unsigned int lane = 0; lane < 8; ++lane)
+    {
+        const unsigned int shift = lane * 8;
+        source +=
+            "srli x4, x1, " + std::to_string(shift) + "\n" +
+            "andi x4, x4, 255\n" +
+            "srli x5, x2, " + std::to_string(shift) + "\n" +
+            "andi x5, x5, 255\n" +
+            (subtract ? "sub x6, x4, x5\n" : "add x6, x4, x5\n") +
+            "andi x6, x6, 255\n";
+
+        if (shift != 0)
+        {
+            source += "slli x6, x6, " + std::to_string(shift) + "\n";
+        }
+        source += "or x11, x11, x6\n";
+    }
+
+    return runSource(source);
+}
+
+std::unique_ptr<Kites::RVSSProcessor> runScalarByteSaturatingAdd(
+    uint64_t a, uint64_t b)
+{
+    std::string source =
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n"
+        "li x9, 255\n"
+        "li x11, 0\n";
+
+    for (unsigned int lane = 0; lane < 8; ++lane)
+    {
+        const unsigned int shift = lane * 8;
+        source +=
+            "srli x4, x1, " + std::to_string(shift) + "\n" +
+            "andi x4, x4, 255\n" +
+            "srli x5, x2, " + std::to_string(shift) + "\n" +
+            "andi x5, x5, 255\n"
+            "add x6, x4, x5\n"
+            "sltiu x8, x6, 256\n"
+            "sub x8, x0, x8\n"
+            "xori x10, x8, -1\n"
+            "and x6, x6, x8\n"
+            "and x10, x9, x10\n"
+            "or x6, x6, x10\n";
+
+        if (shift != 0)
+        {
+            source += "slli x6, x6, " + std::to_string(shift) + "\n";
+        }
+        source += "or x11, x11, x6\n";
+    }
+
+    return runSource(source);
+}
+
+std::unique_ptr<Kites::RVSSProcessor> runScalarByteSaturatingSub(
+    uint64_t a, uint64_t b)
+{
+    std::string source =
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n"
+        "li x11, 0\n";
+
+    for (unsigned int lane = 0; lane < 8; ++lane)
+    {
+        const unsigned int shift = lane * 8;
+        source +=
+            "srli x4, x1, " + std::to_string(shift) + "\n" +
+            "andi x4, x4, 255\n" +
+            "srli x5, x2, " + std::to_string(shift) + "\n" +
+            "andi x5, x5, 255\n"
+            "sltu x8, x4, x5\n"
+            "sub x8, x0, x8\n"
+            "xori x10, x8, -1\n"
+            "sub x6, x4, x5\n"
+            "and x6, x6, x10\n";
+
+        if (shift != 0)
+        {
+            source += "slli x6, x6, " + std::to_string(shift) + "\n";
+        }
+        source += "or x11, x11, x6\n";
+    }
+
+    return runSource(source);
+}
+
 } 
 
 TEST(PackedSimd, Badd)
@@ -625,6 +769,8 @@ TEST(PackedSimd, Bmuls)
     expectBmuls(0xFF010280, 0x02020102, 0xFF0202FF);
     expectBmuls(0x01020304, 0x04030201, 0x04060604);
     expectBmuls(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
+    expectBmuls(0xFF11223344556677ULL, 0x010F020304050607ULL,
+                0xFFFF4499FFFFFFFFULL);
 }
 
 TEST(PackedSimd, OperatesOnAllEightBytes)
@@ -681,194 +827,97 @@ TEST(PackedSimd, ScalarBmaxCheck)
 
 TEST(PackedSimd, BaddPerformance)
 {
-    uint64_t a = 0x04030201;
-    uint64_t b = 0x08070605;
-    uint64_t expected = 0x0C0A0806;
+    const uint64_t a = 0x1020304050607080ULL;
+    const uint64_t b = 0x0101010101010101ULL;
+    const uint64_t expected = 0x1121314151617181ULL;
 
-    // Scalar implementation
-    std::string scalarSource =
+    auto scalarVm = runScalarByteWrap(a, b, false);
+    auto simdVm = runSource(
         "li x1, " + std::to_string(a) + "\n" +
         "li x2, " + std::to_string(b) + "\n"
+        "badd x3, x1, x2\n");
 
-        "andi x4, x1, 255\n"
-        "andi x5, x2, 255\n"
-        "add x6, x4, x5\n"
-        "andi x6, x6, 255\n"
-
-        "srli x4, x1, 8\n"
-        "andi x4, x4, 255\n"
-        "srli x5, x2, 8\n"
-        "andi x5, x5, 255\n"
-        "add x7, x4, x5\n"
-        "andi x7, x7, 255\n"
-        "slli x7, x7, 8\n"
-        "or x6, x6, x7\n"
-
-        "srli x4, x1, 16\n"
-        "andi x4, x4, 255\n"
-        "srli x5, x2, 16\n"
-        "andi x5, x5, 255\n"
-        "add x7, x4, x5\n"
-        "andi x7, x7, 255\n"
-        "slli x7, x7, 16\n"
-        "or x6, x6, x7\n"
-
-        "srli x4, x1, 24\n"
-        "andi x4, x4, 255\n"
-        "srli x5, x2, 24\n"
-        "andi x5, x5, 255\n"
-        "add x7, x4, x5\n"
-        "andi x7, x7, 255\n"
-        "slli x7, x7, 24\n"
-        "or x6, x6, x7\n";
-
-    auto scalarVm = runSource(scalarSource);
-
-    // SIMD implementation
-    std::string simdSource =
-        "li x1, " + std::to_string(a) + "\n" +
-        "li x2, " + std::to_string(b) + "\n"
-        "badd x3, x1, x2\n";
-
-    auto simdVm = runSource(simdSource);
-
-    EXPECT_EQ(scalarVm->registers_.ReadGpr(6), expected);
+    EXPECT_EQ(scalarVm->registers_.ReadGpr(11), expected);
     EXPECT_EQ(simdVm->registers_.ReadGpr(3), expected);
-
     EXPECT_EQ(scalarVm->instructions_retired_, scalarVm->cycle_s_);
-EXPECT_EQ(simdVm->instructions_retired_, simdVm->cycle_s_);
+    EXPECT_EQ(simdVm->instructions_retired_, simdVm->cycle_s_);
+    ASSERT_GT(scalarVm->instructions_retired_, 0);
+    ASSERT_GT(simdVm->cycle_s_, 0);
+
+    const double reduction =
+        (1.0 - static_cast<double>(simdVm->instructions_retired_) /
+                   scalarVm->instructions_retired_) * 100.0;
+    const double speedup =
+        static_cast<double>(scalarVm->cycle_s_) / simdVm->cycle_s_;
 
     std::cout << "\n--- BADD Performance ---\n";
-
     std::cout << "Scalar instructions: "
-              << scalarVm->instructions_retired_ << "\n";
-
-    std::cout << "Scalar cycles: "
-              << scalarVm->cycle_s_ << "\n";
-
+              << scalarVm->instructions_retired_ << std::endl;
+    std::cout << "Scalar cycles: " << scalarVm->cycle_s_ << std::endl;
     std::cout << "SIMD instructions: "
-              << simdVm->instructions_retired_ << "\n";
-
-    std::cout << "SIMD cycles: "
-              << simdVm->cycle_s_ << "\n";
-
-    std::cout << "Instruction reduction: "
-              << (1.0 - (double)simdVm->instructions_retired_ /
-                            scalarVm->instructions_retired_) * 100
-              << "%\n";
-        
-std::cout << "Simulated speedup: "
-          << (double)scalarVm->cycle_s_ / simdVm->cycle_s_
-          << "x\n";
+              << simdVm->instructions_retired_ << std::endl;
+    std::cout << "SIMD cycles: " << simdVm->cycle_s_ << std::endl;
+    std::cout << "Instruction reduction: " << reduction << "%" << std::endl;
+    std::cout << "Simulated speedup: " << speedup << "x" << std::endl;
 }
 
 TEST(PackedSimd, BsubPerformance)
 {
-    uint64_t a = 0x08070605;
-    uint64_t b = 0x04030201;
-    uint64_t expected = 0x04040404;
+    const uint64_t a = 0x1020304050607080ULL;
+    const uint64_t b = 0x0101010101010101ULL;
+    const uint64_t expected = 0x0F1F2F3F4F5F6F7FULL;
 
-    // Scalar implementation
-    std::string scalarSource =
+    auto scalarVm = runScalarByteWrap(a, b, true);
+    auto simdVm = runSource(
         "li x1, " + std::to_string(a) + "\n" +
         "li x2, " + std::to_string(b) + "\n"
+        "bsub x3, x1, x2\n");
 
-        // Byte 0
-        "andi x4, x1, 255\n"
-        "andi x5, x2, 255\n"
-        "sub x6, x4, x5\n"
-        "andi x6, x6, 255\n"
-
-        // Byte 1
-        "srli x4, x1, 8\n"
-        "andi x4, x4, 255\n"
-        "srli x5, x2, 8\n"
-        "andi x5, x5, 255\n"
-        "sub x7, x4, x5\n"
-        "andi x7, x7, 255\n"
-        "slli x7, x7, 8\n"
-        "or x6, x6, x7\n"
-
-        // Byte 2
-        "srli x4, x1, 16\n"
-        "andi x4, x4, 255\n"
-        "srli x5, x2, 16\n"
-        "andi x5, x5, 255\n"
-        "sub x7, x4, x5\n"
-        "andi x7, x7, 255\n"
-        "slli x7, x7, 16\n"
-        "or x6, x6, x7\n"
-
-        // Byte 3
-        "srli x4, x1, 24\n"
-        "andi x4, x4, 255\n"
-        "srli x5, x2, 24\n"
-        "andi x5, x5, 255\n"
-        "sub x7, x4, x5\n"
-        "andi x7, x7, 255\n"
-        "slli x7, x7, 24\n"
-        "or x6, x6, x7\n";
-
-    auto scalarVm = runSource(scalarSource);
-
-    // SIMD implementation
-    std::string simdSource =
-        "li x1, " + std::to_string(a) + "\n" +
-        "li x2, " + std::to_string(b) + "\n"
-        "bsub x3, x1, x2\n";
-
-    auto simdVm = runSource(simdSource);
-
-    EXPECT_EQ(scalarVm->registers_.ReadGpr(6), expected);
+    EXPECT_EQ(scalarVm->registers_.ReadGpr(11), expected);
     EXPECT_EQ(simdVm->registers_.ReadGpr(3), expected);
-
     EXPECT_EQ(scalarVm->instructions_retired_, scalarVm->cycle_s_);
-EXPECT_EQ(simdVm->instructions_retired_, simdVm->cycle_s_);
+    EXPECT_EQ(simdVm->instructions_retired_, simdVm->cycle_s_);
+    ASSERT_GT(scalarVm->instructions_retired_, 0);
+    ASSERT_GT(simdVm->cycle_s_, 0);
+
+    const double reduction =
+        (1.0 - static_cast<double>(simdVm->instructions_retired_) /
+                   scalarVm->instructions_retired_) * 100.0;
+    const double speedup =
+        static_cast<double>(scalarVm->cycle_s_) / simdVm->cycle_s_;
 
     std::cout << "\n--- BSUB Performance ---\n";
-
     std::cout << "Scalar instructions: "
-              << scalarVm->instructions_retired_ << "\n";
-
-    std::cout << "Scalar cycles: "
-              << scalarVm->cycle_s_ << "\n";
-
+              << scalarVm->instructions_retired_ << std::endl;
+    std::cout << "Scalar cycles: " << scalarVm->cycle_s_ << std::endl;
     std::cout << "SIMD instructions: "
-              << simdVm->instructions_retired_ << "\n";
-
-    std::cout << "SIMD cycles: "
-              << simdVm->cycle_s_ << "\n";
-
-    std::cout << "Instruction reduction: "
-              << (1.0 - (double)simdVm->instructions_retired_ /
-                            scalarVm->instructions_retired_) * 100
-              << "%\n";
-
-    std::cout << "Simulated speedup: "
-              << (double)scalarVm->cycle_s_ / simdVm->cycle_s_
-              << "x\n";
+              << simdVm->instructions_retired_ << std::endl;
+    std::cout << "SIMD cycles: " << simdVm->cycle_s_ << std::endl;
+    std::cout << "Instruction reduction: " << reduction << "%" << std::endl;
+    std::cout << "Simulated speedup: " << speedup << "x" << std::endl;
 }
 
 TEST(PackedSimd, BminPerformance)
 {
-    uint64_t a = 0x08070605;
-    uint64_t b = 0x04030201;
-    uint64_t expected = 0x04030201;
+    const uint64_t a = 0x1020304050607080ULL;
+    const uint64_t b = 0x0101010101010101ULL;
+    const uint64_t expected = 0x0101010101010101ULL;
 
     // Scalar implementation
     auto scalarVm = expectScalarBmin(a, b, expected);
 
     // SIMD implementation
     auto simdVm = runSource(
-        "li x1, 0x08070605\n"
-        "li x2, 0x04030201\n"
-        "bmin x3, x1, x2\n"
-    );
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n"
+        "bmin x3, x1, x2\n");
 
     EXPECT_EQ(simdVm->registers_.ReadGpr(3), expected);
 
     EXPECT_EQ(scalarVm->instructions_retired_, scalarVm->cycle_s_);
     EXPECT_EQ(simdVm->instructions_retired_, simdVm->cycle_s_);
+    ASSERT_GT(scalarVm->instructions_retired_, 0);
+    ASSERT_GT(simdVm->cycle_s_, 0);
 
     double reduction =
         (1.0 - (double)simdVm->instructions_retired_ /
@@ -895,24 +944,25 @@ TEST(PackedSimd, BminPerformance)
 
 TEST(PackedSimd, BmaxPerformance)
 {
-    uint64_t a = 0x08070605;
-    uint64_t b = 0x04030201;
-    uint64_t expected = 0x08070605;
+    const uint64_t a = 0x1020304050607080ULL;
+    const uint64_t b = 0x0101010101010101ULL;
+    const uint64_t expected = a;
 
     // Scalar implementation
     auto scalarVm = expectScalarBmax(a, b, expected);
 
     // SIMD implementation
     auto simdVm = runSource(
-        "li x1, 0x08070605\n"
-        "li x2, 0x04030201\n"
-        "bmax x3, x1, x2\n"
-    );
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n"
+        "bmax x3, x1, x2\n");
 
     EXPECT_EQ(simdVm->registers_.ReadGpr(3), expected);
 
     EXPECT_EQ(scalarVm->instructions_retired_, scalarVm->cycle_s_);
     EXPECT_EQ(simdVm->instructions_retired_, simdVm->cycle_s_);
+    ASSERT_GT(scalarVm->instructions_retired_, 0);
+    ASSERT_GT(simdVm->cycle_s_, 0);
 
     double reduction =
         (1.0 - (double)simdVm->instructions_retired_ /
@@ -934,4 +984,151 @@ TEST(PackedSimd, BmaxPerformance)
               << reduction << "%" << std::endl;
     std::cout << "Simulated speedup: "
               << speedup << "x" << std::endl;
+}
+
+TEST(PackedSimd, BmulPerformance)
+{
+    const uint64_t a = 0x7F020A0503FE0C04ULL;
+    const uint64_t b = 0x0202020202020202ULL;
+    const uint64_t expected = 0xFE04140A06FC1808ULL;
+
+    auto scalarVm = runScalarByteMultiply(a, b, false);
+    auto simdVm = runSource(
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n"
+        "bmul x3, x1, x2\n");
+
+    EXPECT_EQ(scalarVm->registers_.ReadGpr(11), expected);
+    EXPECT_EQ(simdVm->registers_.ReadGpr(3), expected);
+    EXPECT_EQ(scalarVm->instructions_retired_, scalarVm->cycle_s_);
+    EXPECT_EQ(simdVm->instructions_retired_, simdVm->cycle_s_);
+    ASSERT_GT(scalarVm->instructions_retired_, 0);
+    ASSERT_GT(simdVm->cycle_s_, 0);
+
+    const double reduction =
+        (1.0 - static_cast<double>(simdVm->instructions_retired_) /
+                   scalarVm->instructions_retired_) * 100.0;
+    const double speedup =
+        static_cast<double>(scalarVm->cycle_s_) / simdVm->cycle_s_;
+
+    std::cout << "\n--- BMUL Performance ---\n";
+    std::cout << "Scalar instructions: "
+              << scalarVm->instructions_retired_ << std::endl;
+    std::cout << "Scalar cycles: " << scalarVm->cycle_s_ << std::endl;
+    std::cout << "SIMD instructions: "
+              << simdVm->instructions_retired_ << std::endl;
+    std::cout << "SIMD cycles: " << simdVm->cycle_s_ << std::endl;
+    std::cout << "Instruction reduction: " << reduction << "%" << std::endl;
+    std::cout << "Simulated speedup: " << speedup << "x" << std::endl;
+}
+
+TEST(PackedSimd, BmulsPerformance)
+{
+    const uint64_t a = 0x7F020A0503FE0C04ULL;
+    const uint64_t b = 0x0202020202020202ULL;
+    const uint64_t expected = 0xFE04140A06FF1808ULL;
+
+    auto scalarVm = runScalarByteMultiply(a, b, true);
+    auto simdVm = runSource(
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n"
+        "bmuls x3, x1, x2\n");
+
+    EXPECT_EQ(scalarVm->registers_.ReadGpr(11), expected);
+    EXPECT_EQ(simdVm->registers_.ReadGpr(3), expected);
+    EXPECT_EQ(scalarVm->instructions_retired_, scalarVm->cycle_s_);
+    EXPECT_EQ(simdVm->instructions_retired_, simdVm->cycle_s_);
+    ASSERT_GT(scalarVm->instructions_retired_, 0);
+    ASSERT_GT(simdVm->cycle_s_, 0);
+
+    const double reduction =
+        (1.0 - static_cast<double>(simdVm->instructions_retired_) /
+                   scalarVm->instructions_retired_) * 100.0;
+    const double speedup =
+        static_cast<double>(scalarVm->cycle_s_) / simdVm->cycle_s_;
+
+    std::cout << "\n--- BMULS Performance ---\n";
+    std::cout << "Scalar instructions: "
+              << scalarVm->instructions_retired_ << std::endl;
+    std::cout << "Scalar cycles: " << scalarVm->cycle_s_ << std::endl;
+    std::cout << "SIMD instructions: "
+              << simdVm->instructions_retired_ << std::endl;
+    std::cout << "SIMD cycles: " << simdVm->cycle_s_ << std::endl;
+    std::cout << "Instruction reduction: " << reduction << "%" << std::endl;
+    std::cout << "Simulated speedup: " << speedup << "x" << std::endl;
+}
+
+
+TEST(PackedSimd, BaddsPerformance)
+{
+    const uint64_t a = 0xFA141E28FA141E28ULL;
+    const uint64_t b = 0x0A0A0A0A0A0A0A0AULL;
+    const uint64_t expected = 0xFF1E2832FF1E2832ULL;
+
+    auto scalarVm = runScalarByteSaturatingAdd(a, b);
+
+    auto simdVm = runSource(
+        "li x1, " + std::to_string(a) + "\n"
+        "li x2, " + std::to_string(b) + "\n"
+        "badds x3, x1, x2\n"
+    );
+
+    EXPECT_EQ(scalarVm->registers_.ReadGpr(11), expected);
+    EXPECT_EQ(simdVm->registers_.ReadGpr(3), expected);
+    ASSERT_GT(scalarVm->instructions_retired_, 0);
+    ASSERT_GT(simdVm->cycle_s_, 0);
+
+    double reduction =
+        (1.0 - (double)simdVm->instructions_retired_ /
+        scalarVm->instructions_retired_) * 100.0;
+
+    double speedup =
+        (double)scalarVm->cycle_s_ / simdVm->cycle_s_;
+
+    std::cout << "\n--- BADDS Performance ---\n";
+    std::cout << "Scalar instructions: "
+              << scalarVm->instructions_retired_ << "\n";
+    std::cout << "Scalar cycles: " << scalarVm->cycle_s_ << "\n";
+    std::cout << "SIMD instructions: "
+              << simdVm->instructions_retired_ << "\n";
+    std::cout << "SIMD cycles: " << simdVm->cycle_s_ << "\n";
+    std::cout << "Instruction reduction: " << reduction << "%\n";
+    std::cout << "Simulated speedup: " << speedup << "x\n";
+}
+
+TEST(PackedSimd, BsubsPerformance)
+{
+    const uint64_t a = 0x08070605080A1420ULL;
+    const uint64_t b = 0x040302010A0F0A10ULL;
+    const uint64_t expected = 0x0404040400000A10ULL;
+
+    auto scalarVm = runScalarByteSaturatingSub(a, b);
+
+    auto simdVm = runSource(
+        "li x1, " + std::to_string(a) + "\n"
+        "li x2, " + std::to_string(b) + "\n"
+        "bsubs x3, x1, x2\n"
+    );
+
+    EXPECT_EQ(scalarVm->registers_.ReadGpr(11), expected);
+    EXPECT_EQ(simdVm->registers_.ReadGpr(3), expected);
+    ASSERT_GT(scalarVm->instructions_retired_, 0);
+    ASSERT_GT(simdVm->cycle_s_, 0);
+
+    double reduction =
+        (1.0 - (double)simdVm->instructions_retired_ /
+        scalarVm->instructions_retired_) * 100.0;
+
+    double speedup =
+        (double)scalarVm->cycle_s_ / simdVm->cycle_s_;
+
+    std::cout << "\n--- BSUBS Performance ---\n";
+    std::cout << "Scalar instructions: "
+              << scalarVm->instructions_retired_ << "\n";
+    std::cout << "Scalar cycles: " << scalarVm->cycle_s_ << "\n";
+    std::cout << "SIMD instructions: "
+              << simdVm->instructions_retired_ << "\n";
+    std::cout << "SIMD cycles: " << simdVm->cycle_s_ << "\n";
+    std::cout << "Instruction reduction: " << reduction << "%\n";
+    std::cout << "Simulated speedup: " << speedup << "x\n";
 }
