@@ -1,43 +1,115 @@
-# KITES : RISC - V SIMULATOR
+# SIMD Extension in KITES RISC-V Simulator
 
-Kites a is RISC V simulator and assembly code editor built for RISC V ISA.
-Kites support I,M,D and F extenstion in single cyle mod and I,M extension in 5 Stage pipelining mode.(D,F will be added in future releases).
+## Overview
 
-## Downloading and Installation
+This project extends the KITES RISC-V simulator with custom SIMD (Single Instruction, Multiple Data) instructions for packed 8-bit operations.
 
-Prebuilt libraries are available for Linux,Windows on [Release Page](https://github.com/hghit-harshit/Kites/releases)
+It uses 64-bit general-purpose registers divided into eight independent 8-bit lanes, allowing one instruction to process eight values simultaneously.
 
-### Ubuntu(for only ubuntu-22.04 and above)
-- Run chmod +x for the Kites AppImage.
-- Run the file.
+## Custom SIMD Instructions
 
-### Windows
-- All the required files are inside the zip file, so you can just run the file.
-- In case you get popup regarding some missing dll please contact us.
+### Unsigned Instructions
 
-## MacOS
-- Put Kites in the application 
+| Instruction | Function |
+|---|---|
+| `BADD` | Wrapping addition |
+| `BSUB` | Wrapping subtraction |
+| `BMIN` | Unsigned minimum |
+| `BMAX` | Unsigned maximum |
+| `BMUL` | Multiplication (lower 8 bits retained) |
+| `BADDS` | Saturating addition |
+| `BSUBS` | Saturating subtraction |
+| `BMULS` | Saturating multiplication |
 
-RUN
+### Signed Instructions
 
-```bash
-sudo xattr -rd com.apple.quarantine sudo xattr -rd com.apple.quarantine /path/to/application.app
+| Instruction | Function |
+|---|---|
+| `BSADD` | Signed saturating addition |
+| `BSSUB` | Signed saturating subtraction |
+| `BSMUL` | Signed saturating multiplication |
 
-```
+Signed operations use the range -128 to 127 and process all eight lanes independently.
+
+## Instruction Encoding
+
+All instructions use the R-type format and custom opcode `0101011` (`0x2B`).
+
+- Unsigned instructions: `funct7 = 0000000`
+- Signed instructions: `funct7 = 0000001`
+
+The `funct3` field selects the operation.
+
+| funct3 | Unsigned | Signed |
+|---|---|---|
+| `000` | BADD | BSADD |
+| `001` | BSUB | BSSUB |
+| `010` | BMIN | — |
+| `011` | BMAX | — |
+| `100` | BMUL | BSMUL |
+| `101` | BADDS | — |
+| `110` | BSUBS | — |
+| `111` | BMULS | — |
+
+## Applications
+
+The SIMD extension is demonstrated through three image-processing applications:
+
+1. **Grayscale Brightness Adjustment:** Uses BADD and BADDS to increase pixel brightness.
+2. **Image Difference Detection:** Uses BSUBS and BMAX to calculate differences between two frames.
+3. **Binary-Mask Compositing:** Uses BSUB, BMUL and BADD to combine foreground and background pixels using a binary mask.
+
+## Performance Evaluation
+
+Scalar and SIMD implementations are compared using the same inputs and expected outputs.
+
+Performance is measured using simulated cycle counts from KITES.
+
+`Speedup = Scalar Cycles / SIMD Cycles`
+
+The SIMD implementation reduces simulated execution cycles for the tested operations and applications.
+
+## Testing
+
+The implementation is verified using the Google Test framework.
+
+Tests cover:
+- All custom SIMD instructions.
+- Overflow, underflow and saturation.
+- Signed and unsigned boundary values.
+- Independent processing of all eight lanes.
+- Scalar reference comparisons.
+
+## Challenges and Limitations
+
+- Extended the initial four-lane examples and tests to support all eight lanes of the 64-bit register.
+- Currently focuses on packed 8-bit operations.
+- BMUL retains only the lower 8 bits, so it does not preserve full multiplication results.
+- Tested in the KITES simulator, not on physical hardware.
+
+## Future Scope
+
+- Support for 16-bit and 32-bit SIMD operations.
+- Additional signed SIMD instructions.
+- Integration into a five-stage pipelined processor.
+- More applications in image and audio processing.
 
 ## Building
 
-To build Kites you will first neet to install Qt(version above 6.9)
-Then simply build using
+Requires Qt 6.9 or above and CMake.
 
 ```bash
 cmake -DCMAKE_PREFIX_PATH="path/to/Qt/6.x.x/<compiler>" ..
 ```
 
-## Testing
+## Testing Documentation
 
-See [docs/TESTING.md](TESTING) for how to build and run tests, including coverage reports.
+Refer to [docs/TESTING.md](docs/TESTING.md) for build and test instructions.
 
-## CLI
+## CLI Documentation
 
-See [docs/CLI.md](docs/CLI.md) for how to build and use the headless command-line executable.
+Refer to [docs/CLI.md](docs/CLI.md) for command-line usage.
+
+## Original KITES Repository
+
+https://github.com/hghit-harshit/Kites
