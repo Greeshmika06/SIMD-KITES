@@ -45,7 +45,7 @@ std::vector<uint64_t> loadPackedImage(const std::string &filename)
 
 std::vector<uint64_t> loadPackedImage()
 {
-    return loadPackedImage("image_processing/input.txt");
+    return loadPackedImage("../image_processing/input.txt");
 }
 
 void loadImageIntoMemory(
@@ -476,14 +476,14 @@ TEST(ImageProcessing, BrightnessComparisonAndPerformance)
     auto simdResult = runBrightness(
         pixels,
         true,
-        "image_processing/simd_output.txt"
+        "../image_processing/simd_output.txt"
     );
 
     // Run Scalar implementation
     auto scalarResult = runBrightness(
         pixels,
         false,
-        "image_processing/scalar_output.txt"
+        "../image_processing/scalar_output.txt"
     );
 
     // Compare outputs
@@ -505,8 +505,8 @@ TEST(ImageProcessing, BrightnessComparisonAndPerformance)
 
 TEST(ImageProcessing, PixelDifferenceComparisonAndPerformance)
 {
-    auto frame1 = loadPackedImage("image_processing/frame1.txt");
-    auto frame2 = loadPackedImage("image_processing/frame2.txt");
+    auto frame1 = loadPackedImage("../image_processing/frame1.txt");
+    auto frame2 = loadPackedImage("../image_processing/frame2.txt");
 
     ASSERT_FALSE(frame1.empty());
     ASSERT_EQ(frame1.size(), frame2.size());
@@ -515,13 +515,13 @@ TEST(ImageProcessing, PixelDifferenceComparisonAndPerformance)
         frame1,
         frame2,
         true,
-        "image_processing/pixel_difference_simd.txt"
+        "../image_processing/pixel_difference_simd.txt"
     );
     auto scalarResult = runPixelDifference(
         frame1,
         frame2,
         false,
-        "image_processing/pixel_difference_scalar.txt"
+        "../image_processing/pixel_difference_scalar.txt"
     );
 
     compareOutputs(simdResult.output, scalarResult.output);

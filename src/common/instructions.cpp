@@ -32,6 +32,9 @@ std::unordered_map<Instruction, InstructionEncoding> instruction_encoding_map = 
     {Instruction::kbadds, {0b0101011, -1, 0b101, -1, -1, 0b0000000}},
     {Instruction::kbsubs, {0b0101011, -1, 0b110, -1, -1, 0b0000000}},
     {Instruction::kbmuls, {0b0101011, -1, 0b111, -1, -1, 0b0000000}},
+    {Instruction::kbsadd, {0b0101011, -1, 0b000, -1, -1, 0b0000001}},
+    {Instruction::kbssub, {0b0101011, -1, 0b001, -1, -1, 0b0000001}},
+    {Instruction::kbsmul, {0b0101011, -1, 0b100, -1, -1, 0b0000001}},
     {Instruction::kxor, {0b0110011, -1, 0b100, -1, -1, 0b0000000}},
     {Instruction::ksrl, {0b0110011, -1, 0b101, -1, -1, 0b0000000}},
     {Instruction::ksra, {0b0110011, -1, 0b101, -1, -1, 0b0100000}},
@@ -216,6 +219,9 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
     {"badds", Instruction::kbadds},
     {"bsubs", Instruction::kbsubs},
     {"bmuls", Instruction::kbmuls},
+    {"bsadd", Instruction::kbsadd},
+    {"bssub", Instruction::kbssub},
+    {"bsmul", Instruction::kbsmul},
 
     {"addw", Instruction::kaddw},
     {"subw", Instruction::ksubw},
@@ -368,7 +374,7 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
 };
 
 static const std::unordered_set<std::string> valid_instructions = {
-    "add", "sub","and", "or", "xor", "sll", "srl", "sra", "slt", "sltu", "badd", "bsub", "bmin", "bmax","bmul", "badds", "bsubs", "bmuls", "addw", "subw", "sllw",
+    "add", "sub","and", "or", "xor", "sll", "srl", "sra", "slt", "sltu", "badd", "bsub", "bmin", "bmax","bmul", "badds", "bsubs", "bmuls", "bsadd", "bssub", "bsmul", "addw", "subw", "sllw",
     "srlw", "sraw", "addi", "xori", "ori", "andi", "slli", "srli", "srai", "slti", "sltiu", "addiw",
     "slliw", "srliw", "sraiw", "lb", "lh", "lw", "ld", "lbu", "lhu", "lwu", "sb", "sh", "sw", "sd",
     "beq", "bne", "blt", "bge", "bltu", "bgeu", "lui", "auipc", "jal", "jalr", "ecall", "ebreak",
@@ -418,6 +424,9 @@ static const std::unordered_set<std::string> RTypeInstructions = {
     "badds",
     "bsubs",
     "bmuls",
+    "bsadd",
+    "bssub",
+    "bsmul",
 
     // RV64
     "addw",
@@ -571,6 +580,9 @@ std::unordered_map<std::string, RTypeInstructionEncoding> R_type_instruction_enc
     {"badds", {0b0101011, 0b101, 0b0000000}},
     {"bsubs", {0b0101011, 0b110, 0b0000000}},
     {"bmuls", {0b0101011, 0b111, 0b0000000}},
+    {"bsadd", {0b0101011, 0b000, 0b0000001}},
+    {"bssub", {0b0101011, 0b001, 0b0000001}},
+    {"bsmul", {0b0101011, 0b100, 0b0000001}},
 
     {"addw", {0b0111011, 0b000, 0b0000000}},
     //==RV64M======================================================================================
@@ -820,6 +832,9 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     {"badds", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"bsubs", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"bmuls", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"bsadd", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"bssub", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"bsmul", {SyntaxType::O_GPR_C_GPR_C_GPR}},
 
     {"addi", {SyntaxType::O_GPR_C_GPR_C_I}},
     {"xori", {SyntaxType::O_GPR_C_GPR_C_I}},
@@ -1366,6 +1381,30 @@ std::string disassemble(uint32_t instruction)
 
     switch (opcode)
     {
+
+    case 0b0101011:
+    {
+        if (funct7 == 0b0000001)
+        {
+            std::string name;
+            switch (funct3)
+            {
+            case 0b000:
+                name = "bsadd";
+                break;
+            case 0b001:
+                name = "bssub";
+                break;
+            case 0b100:
+                name = "bsmul";
+                break;
+            }
+
+            if (!name.empty())
+                return name + " " + xr(rd) + ", " + xr(rs1) + ", " + xr(rs2);
+        }
+        break;
+    }
 
     case 0b0110011:
     { // R-type integer

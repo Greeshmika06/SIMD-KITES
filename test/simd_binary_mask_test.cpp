@@ -98,7 +98,7 @@ BinaryMaskRun runBinaryMask(
     uint64_t background,
     uint64_t mask,
     bool useBmul)
-{
+{Error: (modelSelectionFailed) Client is not connected. Call start() first.
     Kites::setupVmStateDirectory();
     auto vm = std::make_unique<Kites::RVSSProcessor>();
     std::istringstream stream(

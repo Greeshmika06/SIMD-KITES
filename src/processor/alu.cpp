@@ -146,6 +146,70 @@ namespace alu
         return {result, false};
     }
 
+    case AluOp::BSADD:
+    {
+        uint64_t result = 0;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            uint64_t byte_a = (a >> (i * 8)) & 0xFF;
+            uint64_t byte_b = (b >> (i * 8)) & 0xFF;
+            int16_t signed_a = static_cast<int16_t>(byte_a);
+            int16_t signed_b = static_cast<int16_t>(byte_b);
+            signed_a = (signed_a >= 128) ? signed_a - 256 : signed_a;
+            signed_b = (signed_b >= 128) ? signed_b - 256 : signed_b;
+            int16_t sum = signed_a + signed_b;
+            int16_t saturated = (sum > 127) ? 127 : ((sum < -128) ? -128 : sum);
+
+            result |= (static_cast<uint64_t>(static_cast<uint8_t>(saturated)) << (i * 8));
+        }
+
+        return {result, false};
+    }
+
+    case AluOp::BSSUB:
+    {
+        uint64_t result = 0;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            uint64_t byte_a = (a >> (i * 8)) & 0xFF;
+            uint64_t byte_b = (b >> (i * 8)) & 0xFF;
+            int16_t signed_a = static_cast<int16_t>(byte_a);
+            int16_t signed_b = static_cast<int16_t>(byte_b);
+            signed_a = (signed_a >= 128) ? signed_a - 256 : signed_a;
+            signed_b = (signed_b >= 128) ? signed_b - 256 : signed_b;
+            int16_t difference = signed_a - signed_b;
+            int16_t saturated =
+                (difference > 127) ? 127 : ((difference < -128) ? -128 : difference);
+
+            result |= (static_cast<uint64_t>(static_cast<uint8_t>(saturated)) << (i * 8));
+        }
+
+        return {result, false};
+    }
+
+    case AluOp::BSMUL:
+    {
+        uint64_t result = 0;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            uint64_t byte_a = (a >> (i * 8)) & 0xFF;
+            uint64_t byte_b = (b >> (i * 8)) & 0xFF;
+            int16_t signed_a = static_cast<int16_t>(byte_a);
+            int16_t signed_b = static_cast<int16_t>(byte_b);
+            signed_a = (signed_a >= 128) ? signed_a - 256 : signed_a;
+            signed_b = (signed_b >= 128) ? signed_b - 256 : signed_b;
+            int16_t product = signed_a * signed_b;
+            int16_t saturated = (product > 127) ? 127 : ((product < -128) ? -128 : product);
+
+            result |= (static_cast<uint64_t>(static_cast<uint8_t>(saturated)) << (i * 8));
+        }
+
+        return {result, false};
+    }
+
     case AluOp::ADD:
     {
         auto sa = static_cast<int64_t>(a);

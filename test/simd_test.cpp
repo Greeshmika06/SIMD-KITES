@@ -124,6 +124,66 @@ void expectBmuls(uint64_t a, uint64_t b, uint64_t expected)
     EXPECT_EQ(vm->registers_.ReadGpr(3), expected);
 }
 
+enum class SignedSaturatingOperation
+{
+    Add,
+    Subtract,
+    Multiply
+};
+
+int16_t signedByte(uint8_t value)
+{
+    return (value < 0x80) ? static_cast<int16_t>(value)
+                          : static_cast<int16_t>(value) - 0x100;
+}
+
+uint64_t scalarSignedSaturatingReference(uint64_t a, uint64_t b,
+                                         SignedSaturatingOperation operation)
+{
+    uint64_t result = 0;
+
+    for (int i = 0; i < 8; ++i)
+    {
+        const int16_t byte_a = signedByte(static_cast<uint8_t>(a >> (i * 8)));
+        const int16_t byte_b = signedByte(static_cast<uint8_t>(b >> (i * 8)));
+        int32_t value = 0;
+
+        switch (operation)
+        {
+        case SignedSaturatingOperation::Add:
+            value = byte_a + byte_b;
+            break;
+        case SignedSaturatingOperation::Subtract:
+            value = byte_a - byte_b;
+            break;
+        case SignedSaturatingOperation::Multiply:
+            value = byte_a * byte_b;
+            break;
+        }
+
+        if (value > 127)
+            value = 127;
+        else if (value < -128)
+            value = -128;
+
+        result |= (static_cast<uint64_t>(static_cast<uint8_t>(value)) << (i * 8));
+    }
+
+    return result;
+}
+
+void expectSignedSaturating(const std::string &instruction, uint64_t a, uint64_t b,
+                            SignedSaturatingOperation operation)
+{
+    const std::string source =
+        "li x1, " + std::to_string(a) + "\n" +
+        "li x2, " + std::to_string(b) + "\n" +
+        instruction + " x3, x1, x2\n";
+    const auto vm = runSource(source);
+
+    EXPECT_EQ(vm->registers_.ReadGpr(3), scalarSignedSaturatingReference(a, b, operation));
+}
+
 
 void expectScalarBadd(uint64_t a, uint64_t b, uint64_t expected)
 {
@@ -771,6 +831,59 @@ TEST(PackedSimd, Bmuls)
     expectBmuls(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
     expectBmuls(0xFF11223344556677ULL, 0x010F020304050607ULL,
                 0xFFFF4499FFFFFFFFULL);
+}
+
+TEST(PackedSimd, BSADD)
+{
+    constexpr uint64_t max_signed = 0x7F7F7F7F7F7F7F7FULL;
+    constexpr uint64_t min_signed = 0x8080808080808080ULL;
+    constexpr uint64_t zero = 0;
+
+    expectSignedSaturating("bsadd", 0x6464646464646464ULL, 0x3232323232323232ULL,
+                           SignedSaturatingOperation::Add);
+    expectSignedSaturating("bsadd", 0x9C9C9C9C9C9C9C9CULL, 0xCECECECECECECECEULL,
+                           SignedSaturatingOperation::Add);
+    expectSignedSaturating("bsadd", 0x1414141414141414ULL, 0x1E1E1E1E1E1E1E1EULL,
+                           SignedSaturatingOperation::Add);
+    expectSignedSaturating("bsadd", max_signed, zero, SignedSaturatingOperation::Add);
+    expectSignedSaturating("bsadd", min_signed, zero, SignedSaturatingOperation::Add);
+    expectSignedSaturating("bsadd", 0x7F80647F9CFF0001ULL, 0x01FF3264CE01807FULL,
+                           SignedSaturatingOperation::Add);
+}
+
+TEST(PackedSimd, BSSUB)
+{
+    constexpr uint64_t zero = 0;
+
+    expectSignedSaturating("bssub", 0x6464646464646464ULL, 0xCECECECECECECECEULL,
+                           SignedSaturatingOperation::Subtract);
+    expectSignedSaturating("bssub", 0x9C9C9C9C9C9C9C9CULL, 0x3232323232323232ULL,
+                           SignedSaturatingOperation::Subtract);
+    expectSignedSaturating("bssub", 0x5050505050505050ULL, 0x1E1E1E1E1E1E1E1EULL,
+                           SignedSaturatingOperation::Subtract);
+    expectSignedSaturating("bssub", zero, zero, SignedSaturatingOperation::Subtract);
+    expectSignedSaturating("bssub", 0x7F80647F9CFF0001ULL, 0x01FF3264CE01807FULL,
+                           SignedSaturatingOperation::Subtract);
+}
+
+TEST(PackedSimd, BSMUL)
+{
+    constexpr uint64_t zero = 0;
+
+    expectSignedSaturating("bsmul", 0x1414141414141414ULL, 0xFDFDFDFDFDFDFDFDULL,
+                           SignedSaturatingOperation::Multiply);
+    expectSignedSaturating("bsmul", 0x3232323232323232ULL, 0x0303030303030303ULL,
+                           SignedSaturatingOperation::Multiply);
+    expectSignedSaturating("bsmul", 0xCECECECECECECECEULL, 0x0303030303030303ULL,
+                           SignedSaturatingOperation::Multiply);
+    expectSignedSaturating("bsmul", 0x8080808080808080ULL, 0xFFFFFFFFFFFFFFFFULL,
+                           SignedSaturatingOperation::Multiply);
+    expectSignedSaturating("bsmul", 0x8080808080808080ULL, 0x0101010101010101ULL,
+                           SignedSaturatingOperation::Multiply);
+    expectSignedSaturating("bsmul", zero, 0x7F7F7F7F7F7F7F7FULL,
+                           SignedSaturatingOperation::Multiply);
+    expectSignedSaturating("bsmul", 0x7F80647F9CFF0001ULL, 0x01FF3264CE01807FULL,
+                           SignedSaturatingOperation::Multiply);
 }
 
 TEST(PackedSimd, OperatesOnAllEightBytes)

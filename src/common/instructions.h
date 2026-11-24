@@ -44,6 +44,9 @@ enum class Instruction
     kbadds,
     kbsubs,
     kbmuls,
+    kbsadd,
+    kbssub,
+    kbsmul,
 
     ksubw,
     ksllw,

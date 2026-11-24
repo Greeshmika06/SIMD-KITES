@@ -144,6 +144,10 @@ enum class AluOp
 
     FMV_D_X, ///< Floating point move to integer double operation.
     FMV_X_D, ///< Floating point move from integer double operation.
+
+    BSADD, ///< Packed signed 8-bit saturating addition.
+    BSSUB, ///< Packed signed 8-bit saturating subtraction.
+    BSMUL, ///< Packed signed 8-bit saturating multiplication.
 };
 
 inline std::ostream &operator<<(std::ostream &os, const AluOp &op)
@@ -152,6 +156,15 @@ inline std::ostream &operator<<(std::ostream &os, const AluOp &op)
     {
     case AluOp::NONE:
         os << "NONE";
+        break;
+    case AluOp::BSADD:
+        os << "BSADD";
+        break;
+    case AluOp::BSSUB:
+        os << "BSSUB";
+        break;
+    case AluOp::BSMUL:
+        os << "BSMUL";
         break;
     case AluOp::ADD:
         os << "ADD";

@@ -317,6 +317,21 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp)
 
         case 0b0101011:
     {
+        if (funct7 == 0b0000001)
+        {
+            switch (funct3)
+            {
+            case 0b000:
+                return alu::AluOp::BSADD;
+            case 0b001:
+                return alu::AluOp::BSSUB;
+            case 0b100:
+                return alu::AluOp::BSMUL;
+            default:
+                return alu::AluOp::NONE;
+            }
+        }
+
         switch (funct3)
         {
         case 0b000:
